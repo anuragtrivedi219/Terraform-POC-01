@@ -1,24 +1,25 @@
-# Adding provider details
-
-terraform{
-  required_providers{
-    azurerm= {
-      source="hashicorp/azurerm"
-      version="3.20.0"
+# Configure the Terraform provider
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "3.20.0"
     }
   }
 }
 
-provider "azurerm"{
-  features{}
+# Initialize the Azure provider
+provider "azurerm" {
+  features {}
 }
 
-# Adding resources
+# Create a resource group
 resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
   location = var.location
 }
 
+# Create a virtual network within the resource group
 resource "azurerm_virtual_network" "vnet" {
   name                = var.vnet_name
   address_space       = [var.vnet_address_space]
@@ -26,6 +27,7 @@ resource "azurerm_virtual_network" "vnet" {
   resource_group_name = azurerm_resource_group.rg.name
 }
 
+# Create a subnet within the virtual network
 resource "azurerm_subnet" "subnet" {
   name                 = var.subnet_name
   resource_group_name  = azurerm_resource_group.rg.name
@@ -33,6 +35,7 @@ resource "azurerm_subnet" "subnet" {
   address_prefixes     = [var.subnet_address_prefix]
 }
 
+# Create a network security group with a rule to allow SSH access
 resource "azurerm_network_security_group" "nsg" {
   name                = var.nsg_name
   location            = azurerm_resource_group.rg.location
@@ -51,6 +54,7 @@ resource "azurerm_network_security_group" "nsg" {
   }
 }
 
+# Create a network interface and associate it with the subnet
 resource "azurerm_network_interface" "nic" {
   name                = var.nic_name
   location            = azurerm_resource_group.rg.location
@@ -63,11 +67,13 @@ resource "azurerm_network_interface" "nic" {
   }
 }
 
+# Associate the network interface with the network security group
 resource "azurerm_network_interface_security_group_association" "nsg_association" {
   network_interface_id      = azurerm_network_interface.nic.id
   network_security_group_id = azurerm_network_security_group.nsg.id
 }
 
+# Create an availability set for the virtual machine
 resource "azurerm_availability_set" "avset" {
   name                = var.availability_set_name
   location            = azurerm_resource_group.rg.location
@@ -75,6 +81,7 @@ resource "azurerm_availability_set" "avset" {
   managed             = true
 }
 
+# Create a virtual machine with the specified configuration
 resource "azurerm_virtual_machine" "vm" {
   name                  = var.vm_name
   location              = azurerm_resource_group.rg.location
